@@ -1,6 +1,8 @@
 # AutoManga
 Downloads Manga and sends to kindle every week
 
+
+
 **This program is still under development**
 
 Made by 4RT3MI5
