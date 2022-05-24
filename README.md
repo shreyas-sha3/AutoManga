@@ -23,7 +23,7 @@ Made by 4RT3MI5 - (Discord- 4341#1434)
 Credits:
 MangaFreak- https://w13.mangafreak.net/
 KCC- https://kcc.iosphe.re/
-Gmail- gmail.com
+Gmail- https://mail.google.com/
 
 Arigato!
 
