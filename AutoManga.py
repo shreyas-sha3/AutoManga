@@ -2,17 +2,14 @@ import os
 import time
 import shutil
 import smtplib
-from turtle import width
 import requests
 import pyautogui
 import subprocess
-from bs4 import BeautifulSoup
-from importlib import import_module
-from selenium import webdriver
-from email.message import EmailMessage
-from selenium.webdriver.common.keys import Keys
-from optparse import OptionParser
 from pathlib import Path
+from bs4 import BeautifulSoup
+from optparse import OptionParser
+from importlib import import_module
+from email.message import EmailMessage
 from epubMaker import EPubMaker, CmdProgress
 
 #Variables
@@ -34,7 +31,8 @@ fav = open("Config/MangaList.ini","r").read()
 numOfMangas= len(fav.split(","))
 for i in range(0, numOfMangas):
     mangaName=(fav.split(",")[i])
-
+    i = 1
+    
     #Gettting Latest Chapter
     URL = 'https://w13.mangafreak.net/Manga/'+ mangaName
     print(URL)
@@ -42,31 +40,28 @@ for i in range(0, numOfMangas):
     soup = BeautifulSoup(r.content, 'lxml') 
     recent_chaps = soup.find('div', class_='series_sub_chapter_list')
     latest_chap =  recent_chaps.a.text.split()[1]
-    prev_chap = recent_chaps.find_all('a')[1].text.split()[1]
     chNo = latest_chap
-
-    #Downloading File   
-    mangaURL = 'https://images.mangafreak.net/downloads/' + mangaName + '_' +chNo 
-    response = requests.get(mangaURL)
-    open(mangaName+ "_" +chNo+ ".zip", "wb").write(response.content)
-
-    #Checks if new Chapter is released
-    try:
-        LOCATION1 = mangaName + '_' + chNo + '.zip'
-        shutil.move(LOCATION1, "Downloaded Mangas/")
-    except:
-        print("New chapter is not released for " + mangaName)
-        os.remove(mangaName + '_' + chNo + '.zip')
-        continue
-
-    #Extracting Zip
-    os.mkdir('Downloaded Mangas/'+ mangaName + '_' + chNo)
-    time.sleep(2)
-    shutil.unpack_archive("Downloaded Mangas/" + mangaName + '_' + chNo + '.zip', "Downloaded Mangas/" + mangaName + '_' + chNo)
-
-    #Conversion to EPUB
+    prev_chap = recent_chaps.find_all('a')[1].text.split()[1]
+    newURL = 'https://w13.mangafreak.net' + recent_chaps.a['href']
     mangaDir = 'Downloaded Mangas/' + mangaName + '_'+ chNo + '/'
 
+    #Check if new Manga is released
+    try:
+        os.mkdir(mangaDir)
+    except:
+        print("New chapter is not released for " + mangaName)
+        continue
+
+    #Downloading Individual Pages from manga
+    rs = requests.get(newURL)
+    soup = BeautifulSoup(rs.content, 'lxml') 
+    for item in soup.find_all('img',id='gohere'):
+        print("Downloading Page: "+ str(i))
+        imgUrl = requests.get(item['src'])
+        open(mangaDir+ str(i) +".jpg","wb").write(imgUrl.content)
+        i = i + 1
+    
+    #Conversion to EPUB
     if __name__ == '__main__':
         parser = OptionParser(
             usage='usage: %prog [--cmd] [--progress] --dir DIRECTORY --file FILE --name NAME\n'
@@ -165,14 +160,13 @@ for i in range(0, numOfMangas):
     #Removing previous chapters
     shutil.rmtree("Downloaded Mangas/"+ mangaName + '_' + chNo)
     os.remove("Downloaded Mangas/"+ mangaName + '_' + chNo + '.epub')
-
     try:
-        os.remove("Downloaded Mangas/"+ mangaName + '_' + prev_chap + '.zip')
+        shutil.rmtree("Downloaded Mangas/"+ mangaName + '_' + chNo)
     except:
         None
 
 print("ALL MANGAS SENT")
-
+time.sleep(10)
 
 
 
